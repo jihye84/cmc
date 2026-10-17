@@ -64,18 +64,23 @@ button:focus-visible,.cell:focus-visible{outline:2px solid var(--accent);outline
 .svc a{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);color:var(--paper);text-decoration:none;font-size:14px}
 .svc a:hover,.svc a:focus-visible{background:rgba(255,255,255,.07);outline:none;border-color:var(--accent)}
 .svc a.fav{border-color:var(--accent)}
-.ytbox{display:none;flex-direction:column;gap:8px;min-height:0}
-.ytbox.on{display:flex}
-.ytframe{position:relative;width:min(100%,calc(42vh*16/9));aspect-ratio:16/9;margin:0 auto;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)}
+/* 함께 듣기: 화면에 붙는 작은 플레이어 (소개글을 보면서 들을 수 있게) */
+.dock{grid-row:1;display:flex;gap:10px;align-items:center;min-height:0;min-width:0;padding:8px;border-radius:18px;
+  background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);border:1px solid var(--line)}
+.ytframe{position:relative;flex:none;height:clamp(92px,16vh,190px);aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.ytframe::before{content:'영상 불러오는 중…';position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:var(--paper-dim)}
 .ytframe>div,.ytframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.ytbar{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--paper-dim)}
-.ytbar button,.ytbar a{font:inherit;color:var(--paper);background:none;border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;text-decoration:none;white-space:nowrap}
-.ytbar button:hover,.ytbar a:hover{border-color:var(--accent)}
-.sheet.hasyt .svc{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.sheet.hasyt .svc a{min-height:40px;padding:6px 8px;gap:7px;font-size:12.5px}
-.sheet.hasyt .svc i{width:22px;height:22px;border-radius:7px;font-size:10px}
-.sheet.hasyt .svc small{display:none}
-@media (max-height:520px){.sheet.hasyt .q{display:none}}
+.dockbar{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.dockinfo{min-width:0;display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--paper-dim);line-height:1.35}
+.dockinfo b{display:none;font-family:var(--serif);font-weight:700;font-size:13.5px;color:var(--paper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dockinfo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dockbtns{display:grid;grid-template-columns:repeat(2,34px);gap:6px}
+.dockbtns .ib{min-width:34px;width:34px;height:34px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;color:var(--paper);text-decoration:none}
+.dockbtns .ib svg{width:18px;height:18px}
+body.playing .shell{grid-template-rows:auto auto minmax(0,1fr) auto}
+body.playing .date{grid-row:2}
+body.playing .panel{grid-row:4}
+@media (min-width:430px){ .dockinfo b{display:block} }
 .svc i{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:12px;color:#fff}
 .svc small{display:block;font-size:11.5px;color:var(--paper-dim)}
 .q{font-size:12.5px;color:var(--paper-dim);line-height:1.5;word-break:keep-all}
@@ -111,6 +116,14 @@ h1{margin:0;font-family:var(--serif);font-weight:800;font-size:clamp(20px,3.4vmi
   .date .mon{font-size:clamp(18px,6.4vh,52px)}
   .date .wd{font-size:clamp(11px,2.6vh,17px)}
   .panel{grid-column:2;grid-row:1;max-height:none;height:100%}
+  .dock{grid-column:1;grid-row:1;align-self:start;justify-self:start;flex-direction:column;align-items:stretch;width:min(100%,440px,calc(40vh*16/9))}
+  .dock .ytframe{width:100%;height:auto}
+  .dockbar{flex-direction:row;align-items:center;justify-content:space-between}
+  .dockinfo b{display:block}
+  .dockbtns{grid-template-columns:repeat(4,34px)}
+  body.playing .shell{grid-template-rows:auto minmax(0,1fr)}
+  body.playing .date{grid-row:2}
+  body.playing .panel{grid-row:1 / span 2}
   h1{font-size:clamp(18px,4.2vh + 4px,40px)}
   .who{font-size:clamp(12.5px,2.2vh + 3px,18px)}
   .why{font-size:clamp(12px,1.9vh + 3px,16px)}
@@ -174,6 +187,19 @@ body.wallmode .wall{display:flex}
     <div class="mo"><div class="mon" id="dMon">10월</div><div class="wd" id="dWd">화요일</div></div>
   </div>
 
+  <section class="dock" id="dock" hidden aria-label="지금 듣는 곡">
+    <div class="ytframe"><div id="ytPlayer"></div></div>
+    <div class="dockbar">
+      <div class="dockinfo"><b id="dockTitle"></b><span id="ytNote">추천 연주 1 / 2</span></div>
+      <div class="dockbtns">
+        <button class="ib" id="ytAlt" type="button" aria-label="다른 연주로 바꾸기" title="다른 연주"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button>
+        <a class="ib" id="ytOpen" target="_blank" rel="noopener" aria-label="유튜브에서 크게 보기" title="유튜브에서 보기"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8 8M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
+        <button class="ib" id="dockSvc" type="button" aria-label="다른 음악 서비스에서 듣기" title="다른 서비스"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></button>
+        <button class="ib" id="dockClose" type="button" aria-label="듣기 끄기" title="끄기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+  </section>
+
   <section class="panel" id="panel" aria-live="polite">
     <div class="toprow"><div class="chips" id="chips"></div><button class="listen" id="listenBtn" type="button" aria-label="이 곡 듣기"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>듣기</button></div>
     <h1 id="title">곡명</h1>
@@ -223,10 +249,6 @@ body.wallmode .wall{display:flex}
 <div class="veil" id="listenVeil" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="listenTitle">
     <h2 id="listenTitle"><span>어디서 들을까요?</span><button class="ib" type="button" data-close aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2>
-    <div class="ytbox" id="ytBox">
-      <div class="ytframe"><div id="ytPlayer"></div></div>
-      <div class="ytbar"><span id="ytNote">추천 연주 1</span><span style="display:flex;gap:6px"><button type="button" id="ytAlt">다른 연주</button><a id="ytOpen" target="_blank" rel="noopener">유튜브에서</a></span></div>
-    </div>
     <div class="q" id="lqWrap">검색어 <b id="lq"></b> 로 음악 서비스가 새 창에서 열려요. 마음에 드는 연주를 골라 들어 보세요.</div>
     <div class="svc" id="svc"></div>
   </div>
@@ -470,7 +492,7 @@ function render(i){
   $('wWd').textContent=wd; $('wDate').textContent=m+'월 '+d+'일'; $('wTitle').textContent=e[1]; $('wComp').textContent=e[2];
   document.title='하루 한 곡 일력 · '+m+'월 '+d+'일';
   scene=buildScene(cur); startAnim();
-  requestAnimationFrame(layoutText);
+  updListen(); requestAnimationFrame(layoutText);
   try{ history.replaceState(null,'','#d'+String(m).padStart(2,'0')+String(d).padStart(2,'0')); }catch(err){}
 }
 function go(delta){ follow=false; render(cur+delta); }
@@ -487,7 +509,13 @@ function buildPicker(){
     b.onclick=()=>{ follow=(i===tI); render(i); close('pickVeil'); }; ds.appendChild(b); }
   $('pickHint').textContent='2월 29일은 윤년에만 오는 특별한 날이에요.';
 }
-function open(id){ $(id).hidden=false; if(id==='readVeil') requestAnimationFrame(layoutRead); }
+function placeVeil(v){
+  v.style.top=v.style.left='';
+  if(v.id!=='readVeil' || $('dock').hidden) return;
+  const r=$('dock').getBoundingClientRect();
+  if(innerWidth/innerHeight>=1.25) v.style.left=Math.round(r.right+4)+'px'; else v.style.top=Math.round(r.bottom+4)+'px';
+}
+function open(id){ placeVeil($(id)); $(id).hidden=false; if(id==='readVeil') requestAnimationFrame(layoutRead); }
 function close(id){ $(id).hidden=true; }
 document.querySelectorAll('.veil').forEach(v=>{ v.addEventListener('click',ev=>{ if(ev.target===v||ev.target.closest('[data-close]')) v.hidden=true; }); });
 
@@ -507,16 +535,17 @@ const SVC=[
 function searchQuery(e){ return (e[2].split('·')[0]+' '+e[1]).replace(/[「」『』]/g,' ').replace(/\s중\s/g,' ').replace(/\(.*?\)/g,' ').replace(/\s+/g,' ').trim(); }
 function svcUrl(k,q){ const u=encodeURIComponent(q); return {yt:'https://www.youtube.com/results?search_query='+u, ytm:'https://music.youtube.com/search?q='+u,
   vibe:'https://vibe.naver.com/search?query='+u, melon:'https://www.melon.com/search/total/index.htm?q='+u, sp:'https://open.spotify.com/search/'+u, am:'https://music.apple.com/kr/search?term='+u}[k]; }
-$('listenBtn').onclick=()=>{
-  const q=searchQuery(D[cur]), fav=store.get('svc',''); $('lq').textContent='“'+q+'”';
+function openServices(e){
+  const q=searchQuery(e), fav=store.get('svc',''); $('lq').textContent='“'+q+'”';
   const box=$('svc'); box.innerHTML='';
   SVC.forEach(([k,name,col,mark,sub])=>{ const a=document.createElement('a'); a.href=svcUrl(k,q); a.target='_blank'; a.rel='noopener'; if(k===fav) a.className='fav';
     a.innerHTML='<i style="background:'+col+'">'+mark+'</i><span>'+name+'<small>'+(k===fav?'자주 쓰는 곳':sub)+'</small></span>';
     a.addEventListener('click',()=>{ store.set('svc',k); setTimeout(()=>close('listenVeil'),200); }); box.appendChild(a); });
-  open('listenVeil'); ytStart(D[cur][0]);
-};
-/* 유튜브 플레이어: 추천 1 → 추천 2 → 검색 링크 순으로 자동 대체 */
-const yt={api:null,player:null,md:null,idx:0,ids:[],failed:false};
+  open('listenVeil');
+}
+/* 유튜브 플레이어: 화면에 붙어서 소개글을 읽는 동안 계속 재생. 추천 1 → 추천 2 → 음악 서비스 순으로 자동 대체 */
+const yt={api:null,player:null,md:null,idx:0,ids:[],failed:false,state:-1};
+const SVG_PLAY='<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>', SVG_PAUSE='<svg viewBox="0 0 24 24"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/></svg>';
 function ytLoadApi(){
   if(yt.api) return yt.api;
   yt.api=new Promise((res,rej)=>{
@@ -530,30 +559,52 @@ function ytLoadApi(){
   yt.api.catch(()=>{ yt.failed=true; });
   return yt.api;
 }
-function ytShow(on){ $('ytBox').classList.toggle('on',on); $('listenVeil').querySelector('.sheet').classList.toggle('hasyt',on);
-  $('lqWrap').firstChild.textContent=on?'다른 곳에서 찾아 듣기: 검색어 ':'검색어 ';
-  $('listenTitle').firstElementChild.textContent=on?'지금 들어 볼까요?':'어디서 들을까요?'; }
-function ytLabel(){ const n=yt.ids.length; $('ytNote').textContent='추천 연주 '+(yt.idx+1)+' / '+n; $('ytAlt').hidden=n<2;
-  $('ytOpen').href='https://www.youtube.com/watch?v='+yt.ids[yt.idx]; }
+function dockIsOpen(){ return !$('dock').hidden; }
+function dockOpen(on){ $('dock').hidden=!on; document.body.classList.toggle('playing',on); updListen(); requestAnimationFrame(()=>{ layoutText(); if(!$('readVeil').hidden){ placeVeil($('readVeil')); layoutRead(); } }); }
+function updListen(){
+  const b=$('listenBtn'), mine=dockIsOpen() && yt.md===D[cur][0];
+  if(mine && yt.state===1){ b.innerHTML=SVG_PAUSE+'멈춤'; b.setAttribute('aria-label','잠깐 멈추기'); }
+  else if(mine){ b.innerHTML=SVG_PLAY+'이어 듣기'; b.setAttribute('aria-label','이어 듣기'); }
+  else { b.innerHTML=SVG_PLAY+(dockIsOpen()?'이 곡 듣기':'듣기'); b.setAttribute('aria-label','이 곡 듣기'); }
+}
+function ytLabel(){
+  const i=IDX[yt.md], {m,d}=parts(i), n=yt.ids.length;
+  $('dockTitle').textContent=m+'월 '+d+'일 · '+D[i][1];
+  $('ytNote').textContent='추천 연주 '+(yt.idx+1)+' / '+n; $('ytAlt').hidden=n<2;
+  $('ytOpen').href='https://www.youtube.com/watch?v='+yt.ids[yt.idx];
+  $('dock').setAttribute('aria-label','지금 듣는 곡: '+D[i][1]);
+}
 function ytPlayIdx(i){ yt.idx=i; ytLabel(); if(yt.player&&yt.player.loadVideoById) yt.player.loadVideoById(yt.ids[i]); }
-function ytFail(){ if(yt.idx+1<yt.ids.length){ toast('이 영상은 재생할 수 없어 다른 연주로 바꿨어요'); ytPlayIdx(yt.idx+1); }
-  else { ytShow(false); toast('영상을 틀 수 없어요. 아래 음악 서비스에서 찾아 들어 보세요',3000); } }
-function ytStart(md){
-  const ids=(YTID[md]||[]).filter(Boolean);
-  if(!ids.length||yt.failed){ ytShow(false); return; }
-  if(yt.md===md&&yt.player){ ytShow(true); return; }
-  yt.md=md; yt.ids=ids; yt.idx=0; ytShow(true); ytLabel();
+function ytGiveUp(e){ dockOpen(false); yt.md=null; openServices(e); }
+function ytFail(){
+  if(yt.idx+1<yt.ids.length){ toast('이 영상은 재생할 수 없어 다른 연주로 바꿨어요'); ytPlayIdx(yt.idx+1); }
+  else { toast('영상을 틀 수 없어요. 음악 서비스에서 찾아 들어 보세요',3000); ytGiveUp(D[IDX[yt.md]]); }
+}
+function ytStart(i){
+  const e=D[i], md=e[0], ids=(YTID[md]||[]).filter(Boolean);
+  if(!ids.length||yt.failed){ openServices(e); return; }
+  if(yt.md===md&&yt.player){ dockOpen(true); try{ yt.player.playVideo(); }catch(_){} return; }
+  yt.md=md; yt.ids=ids; yt.idx=0; yt.state=-1; dockOpen(true); ytLabel();
   ytLoadApi().then(()=>{
     if(yt.md!==md) return;
     if(yt.player&&yt.player.loadVideoById){ yt.player.loadVideoById(ids[0]); return; }
-    yt.player=new window.YT.Player('ytPlayer',{videoId:ids[0],host:'https://www.youtube.com',
+    yt.player=new window.YT.Player('ytPlayer',{videoId:ids[0],host:'https://www.youtube.com',width:'100%',height:'100%',
       playerVars:{playsinline:1,rel:0,autoplay:1},
-      events:{onReady:e=>{ try{ e.target.playVideo(); }catch(_){} }, onError:()=>ytFail()}});
-  }).catch(()=>{ ytShow(false); });
+      events:{onReady:ev=>{ try{ ev.target.playVideo(); }catch(_){} },
+              onError:()=>ytFail(),
+              onStateChange:ev=>{ yt.state=ev.data; updListen(); }}});
+  }).catch(()=>{ if(yt.md===md) ytGiveUp(e); });
 }
+$('listenBtn').onclick=()=>{
+  if(dockIsOpen() && yt.md===D[cur][0] && yt.player && yt.player.pauseVideo){
+    try{ if(yt.state===1) yt.player.pauseVideo(); else yt.player.playVideo(); }catch(_){}
+    return;
+  }
+  ytStart(cur);
+};
 $('ytAlt').onclick=()=>ytPlayIdx((yt.idx+1)%yt.ids.length);
-new MutationObserver(()=>{ if($('listenVeil').hidden&&yt.player&&yt.player.pauseVideo) try{ yt.player.pauseVideo(); }catch(e){} })
-  .observe($('listenVeil'),{attributes:true,attributeFilter:['hidden']});
+$('dockSvc').onclick=()=>openServices(yt.md?D[IDX[yt.md]]:D[cur]);
+$('dockClose').onclick=()=>{ try{ yt.player&&yt.player.stopVideo&&yt.player.stopVideo(); }catch(_){} yt.state=-1; dockOpen(false); };
 $('menuBtn').onclick=()=>open('menuVeil');
 function toast(msg,ms=2200){ const t=$('toast'); t.textContent=msg; t.style.opacity=1; clearTimeout(toast.t); toast.t=setTimeout(()=>t.style.opacity=0,ms); }
 function setWall(on){ document.body.classList.toggle('wallmode',on); if(on) toast('화면을 누르면 일력으로 돌아가요'); }
@@ -603,7 +654,7 @@ addEventListener('keydown',ev=>{ const anyOpen=[...document.querySelectorAll('.v
   if(anyOpen) return; if(ev.key==='ArrowLeft') go(-1); else if(ev.key==='ArrowRight') go(1); else if(ev.key==='t'||ev.key==='T') goToday(); });
 
 /* 크기 변화 · 자정 넘김 */
-let rT; addEventListener('resize',()=>{ clearTimeout(rT); rT=setTimeout(()=>{ sizeCanvas(); startAnim(); layoutText(); if(!$('readVeil').hidden) layoutRead(); },120); });
+let rT; addEventListener('resize',()=>{ clearTimeout(rT); rT=setTimeout(()=>{ sizeCanvas(); startAnim(); layoutText(); if(!$('readVeil').hidden){ placeVeil($('readVeil')); layoutRead(); } },120); });
 let lastDay=todayIndex(); setInterval(()=>{ const t=todayIndex(); if(t!==lastDay){ lastDay=t; if(follow) render(t); } },30000);
 
 /* 인앱 안내 (iOS 등 자동 이동이 안 되는 경우) */
