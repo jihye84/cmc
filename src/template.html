@@ -545,10 +545,10 @@ function ytStart(md){
   yt.md=md; yt.ids=ids; yt.idx=0; ytShow(true); ytLabel();
   ytLoadApi().then(()=>{
     if(yt.md!==md) return;
-    if(yt.player&&yt.player.loadVideoById){ yt.player.cueVideoById(ids[0]); return; }
-    yt.player=new window.YT.Player('ytPlayer',{videoId:ids[0],host:'https://www.youtube-nocookie.com',
-      playerVars:{playsinline:1,rel:0,modestbranding:1},
-      events:{onError:()=>ytFail()}});
+    if(yt.player&&yt.player.loadVideoById){ yt.player.loadVideoById(ids[0]); return; }
+    yt.player=new window.YT.Player('ytPlayer',{videoId:ids[0],host:'https://www.youtube.com',
+      playerVars:{playsinline:1,rel:0,autoplay:1},
+      events:{onReady:e=>{ try{ e.target.playVideo(); }catch(_){} }, onError:()=>ytFail()}});
   }).catch(()=>{ ytShow(false); });
 }
 $('ytAlt').onclick=()=>ytPlayIdx((yt.idx+1)%yt.ids.length);
